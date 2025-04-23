@@ -245,24 +245,29 @@ def check_urls_status(urls):
     
     results = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_url = {executor.submit(check_url_status, url): url for url in urls_to_check}
+# Process in chunks (e.g., batches of 100)
+    chunk_size = 100
+    for i in range(0, len(urls), chunk_size):
+        chunk = urls[i:i+chunk_size]
         
-        for future in concurrent.futures.as_completed(future_to_url):
-            try:
-                result = future.result()
-                results.append(result)
-            except Exception as e:
-                url = future_to_url[future]
-                logger.error(f"Error checking URL {url}: {str(e)}")
-                results.append({
-                    'url': url,
-                    'status_code': 0,
-                    'status_message': f'Error: {str(e)}',
-                    'is_redirect': False,
-                    'redirect_url': None
-                })
-    
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            future_to_url = {executor.submit(check_url_status, url): url for url in chunk}
+            
+            for future in concurrent.futures.as_completed(future_to_url):
+                try:
+                    result = future.result()
+                    results.append(result)
+                except Exception as e:
+                    url = future_to_url[future]
+                    logger.error(f"Error checking URL {url}: {str(e)}")
+                    results.append({
+                        'url': url,
+                        'status_code': 0,
+                        'status_message': f'Error: {str(e)}',
+                        'is_redirect': False,
+                        'redirect_url': None
+                    })
+
     return results
 
 def calculate_statistics(results):
