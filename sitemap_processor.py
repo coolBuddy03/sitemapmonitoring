@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Maximum number of parallel requests
-MAX_WORKERS = 10
+MAX_WORKERS = 5
 
 # Custom exception for sitemap processing errors
 class SitemapError(Exception):
