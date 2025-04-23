@@ -1,1 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitemap Monitor</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <!-- Chart.js -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand">
+                <i class="fas fa-sitemap me-2"></i>
+                Sitemap Monitor
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Enter Sitemap URL</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="sitemapForm">
+                            <div class="mb-3">
+                                <label for="sitemapUrl" class="form-label">Sitemap URL</label>
+                                <div class="input-group">
+                                    <input type="url" class="form-control" id="sitemapUrl" 
+                                           placeholder="https://example.com/sitemap.xml" required>
+                                    <button class="btn btn-primary" type="submit" id="submitBtn">
+                                        <span id="spinnerIcon" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                        <span id="submitText">Check Sitemap</span>
+                                    </button>
+                                </div>
+                                <div class="form-text">Enter a sitemap URL to check the status of all URLs within it.</div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Progress -->
+        <div class="row mb-4 d-none" id="processingSection">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-info">
+                        <h5 class="card-title mb-0">Processing Sitemap</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                        </div>
+                        <p class="mt-3 text-center" id="processingMessage">
+                            Processing sitemap. This may take a few minutes for large sitemaps...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section (initially hidden) -->
+        <div class="row mb-4 d-none" id="resultsSection">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Results</h5>
+                        <div>
+                            <button class="btn btn-sm btn-light me-2" id="exportCsvBtn">
+                                <i class="fas fa-file-csv me-1"></i> Export CSV
+                            </button>
+                            <button class="btn btn-sm btn-light me-2" id="exportExcelBtn">
+                                <i class="fas fa-file-excel me-1"></i> Export Excel
+                            </button>
+                            <!-- <a href="/download_zip" class="btn btn-sm btn-primary">
+                                <i class="fas fa-download me-1"></i> Download Code
+                            </a> -->
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-dark">
+                                        <h6 class="card-title mb-0">Summary</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Total URLs
+                                                <span class="badge bg-primary rounded-pill" id="totalUrls">0</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Successful (200-299)
+                                                <span class="badge bg-success rounded-pill" id="successCount">0</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Redirects (300-399)
+                                                <span class="badge bg-info rounded-pill" id="redirectCount">0</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Client Errors (400-499)
+                                                <span class="badge bg-warning rounded-pill" id="clientErrorCount">0</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Server Errors (500-599)
+                                                <span class="badge bg-danger rounded-pill" id="serverErrorCount">0</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Other Errors
+                                                <span class="badge bg-secondary rounded-pill" id="otherCount">0</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Processing Time
+                                                <span class="badge bg-dark rounded-pill" id="processingTime">0s</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-dark">
+                                        <h6 class="card-title mb-0">Status Distribution</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="statusChart" height="200"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- URL Results Table -->
+                        <div class="mt-4">
+                            <h5>URL Status Details</h5>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="resultsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>URL</th>
+                                            <th>Status</th>
+                                            <th>Message</th>
+                                            <th>Redirect</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resultsTableBody">
+                                        <!-- Results will be inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <nav aria-label="Results pagination">
+                                <ul class="pagination justify-content-center" id="pagination">
+                                    <!-- Pagination will be inserted here -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="row mb-4 d-none" id="errorSection">
+            <div class="col-md-12">
+                <div class="alert alert-danger" role="alert">
+                    <h5 class="alert-heading">Error</h5>
+                    <p id="errorMessage"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-5 py-3 bg-dark">
+        <div class="container">
+            <div class="text-center">
+                <span class="text-muted">
+                    <i class="fas fa-sitemap me-2"></i>
+                    Sitemap Monitor Dashboard
+                </span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/chart_utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/export_utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
 
