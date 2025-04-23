@@ -18,7 +18,7 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # Expose the port the app runs on
-EXPOSE 8000
+EXPOSE 5000
 
 # Command to run the application with Gunicorn
 CMD ["gunicorn", "--config", "gunicorn_config.py", "app:app"]  # Using app:app as the Flask instance is in app.py 
