@@ -1,24 +1,17 @@
-FROM python:3.11-slim
+# Use the official Python image
+FROM python:3.9-slim
 
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the Gunicorn config first
-COPY gunicorn_config.py .
-
-# Copy the rest of the application
+# Copy the current directory contents into the container
 COPY . .
 
-# Create a non-root user for security
-RUN adduser --disabled-password --gecos '' appuser
-RUN chown -R appuser:appuser /app
-USER appuser
+# Install the required dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port the app runs on
+# Expose the port that the app will run on
 EXPOSE 5000
 
-# Command to run the application with Gunicorn
-CMD ["gunicorn", "--config", "gunicorn_config.py", "app:app"]  # Using app:app as the Flask instance is in app.py 
+# Set the default command to run the app using Gunicorn
+CMD ["gunicorn", "app:app", "-b", "0.0.0.0:5000"]
