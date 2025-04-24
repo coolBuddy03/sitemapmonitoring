@@ -242,12 +242,12 @@ def check_urls_status(urls):
     """
      # Limit the URLs to the first 5
     # Limit the URLs to the first 5
-    urls_to_check = urls[:100]
+    # urls_to_check = urls[:100]
 
     results = []
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_url = {executor.submit(check_url_status, url): url for url in urls_to_check}
+        future_to_url = {executor.submit(check_url_status, url): url for url in urls}
         
         for future in concurrent.futures.as_completed(future_to_url):
             try:
