@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Maximum number of parallel requests
-MAX_WORKERS = 10
+MAX_WORKERS = 5
 
 # Custom exception for sitemap processing errors
 class SitemapError(Exception):
@@ -241,7 +241,7 @@ def check_urls_status(urls):
         list: List of URL status dictionaries
     """
     # Split the URLs into chunks of 50
-    chunks = [urls[i:i + 50] for i in range(0, len(urls), 50)]
+    chunks = [urls[i:i + 20] for i in range(0, len(urls), 20)]
     results = []
 
     for i, chunk in enumerate(chunks):
