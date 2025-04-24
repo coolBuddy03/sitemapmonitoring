@@ -232,7 +232,7 @@ def check_url_status(url):
 
 def check_urls_status(urls):
     """
-    Check status codes for a list of URLs in parallel
+    Check status codes for a list of URLs in parallel, processing them in chunks of 50 URLs at a time.
     
     Args:
         urls (list): List of URLs to check
@@ -240,29 +240,31 @@ def check_urls_status(urls):
     Returns:
         list: List of URL status dictionaries
     """
-     # Limit the URLs to the first 5
-    # Limit the URLs to the first 5
-    urls_to_check = urls[:50]
-
+    # Split the URLs into chunks of 50
+    chunks = [urls[i:i + 50] for i in range(0, len(urls), 50)]
     results = []
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_url = {executor.submit(check_url_status, url): url for url in urls_to_check}
+
+    for i, chunk in enumerate(chunks):
+        logger.debug(f"Processing chunk {i + 1} of {len(chunks)}")
         
-        for future in concurrent.futures.as_completed(future_to_url):
-            try:
-                result = future.result()
-                results.append(result)
-            except Exception as e:
-                url = future_to_url[future]
-                logger.error(f"Error checking URL {url}: {str(e)}")
-                results.append({
-                    'url': url,
-                    'status_code': 0,
-                    'status_message': f'Error: {str(e)}',
-                    'is_redirect': False,
-                    'redirect_url': None
-                })
+        # Create a ThreadPoolExecutor for each chunk
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            future_to_url = {executor.submit(check_url_status, url): url for url in chunk}
+            
+            for future in concurrent.futures.as_completed(future_to_url):
+                try:
+                    result = future.result()
+                    results.append(result)
+                except Exception as e:
+                    url = future_to_url[future]
+                    logger.error(f"Error checking URL {url}: {str(e)}")
+                    results.append({
+                        'url': url,
+                        'status_code': 0,
+                        'status_message': f'Error: {str(e)}',
+                        'is_redirect': False,
+                        'redirect_url': None
+                    })
     
     return results
 
