@@ -6,6 +6,8 @@ import concurrent.futures
 from bs4 import BeautifulSoup
 from time import time
 from urllib.parse import urlparse
+import psutil
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -13,10 +15,17 @@ logger = logging.getLogger(__name__)
 
 # Maximum number of parallel requests
 MAX_WORKERS = 5
+BATCH_SIZE = 25  # Adjust this depending on your memory limits
 
 # Custom exception for sitemap processing errors
 class SitemapError(Exception):
     pass
+
+def log_memory(tag=""):
+    """Log memory usage at a specific point."""
+    process = psutil.Process(os.getpid())
+    mem = process.memory_info().rss / 1024 / 1024  # In MB
+    logger.debug(f"[MEMORY] {tag} - {mem:.2f} MB")
 
 def process_sitemap(sitemap_url):
     """
@@ -48,17 +57,19 @@ def process_sitemap(sitemap_url):
         while nested_sitemaps:
             nested_sitemap = nested_sitemaps.pop(0)
             _extract_urls_from_sitemap(nested_sitemap, urls_to_check, nested_sitemaps)
-        
+
         logger.debug(f"Found {len(urls_to_check)} URLs to check")
-        
-        # Check status of all URLs in parallel
-        results = check_urls_status(urls_to_check)
+        log_memory("Before URL status checking")
+
+        # Check status of all URLs in parallel with batching
+        results = check_urls_in_batches(urls_to_check)
         
         # Calculate statistics
         stats = calculate_statistics(results)
         
         end_time = time()
         processing_time = round(end_time - start_time, 2)
+        log_memory("After URL status checking")
         
         return {
             'sitemap_url': sitemap_url,
@@ -230,40 +241,15 @@ def check_url_status(url):
             'redirect_url': None
         }
 
-def check_urls_status(urls):
-    """
-    Check status codes for a list of URLs in parallel
-    
-    Args:
-        urls (list): List of URLs to check
-        
-    Returns:
-        list: List of URL status dictionaries
-    """
-     # Limit the URLs to the first 5
-    # Limit the URLs to the first 5
-    # urls_to_check = urls[:50]
-
+def check_urls_in_batches(urls):
+    """Process URLs in memory-efficient batches."""
     results = []
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_url = {executor.submit(check_url_status, url): url for url in urls}
-        
-        for future in concurrent.futures.as_completed(future_to_url):
-            try:
-                result = future.result()
-                results.append(result)
-            except Exception as e:
-                url = future_to_url[future]
-                logger.error(f"Error checking URL {url}: {str(e)}")
-                results.append({
-                    'url': url,
-                    'status_code': 0,
-                    'status_message': f'Error: {str(e)}',
-                    'is_redirect': False,
-                    'redirect_url': None
-                })
-    
+    for i in range(0, len(urls), BATCH_SIZE):
+        batch = urls[i:i + BATCH_SIZE]
+        logger.debug(f"Processing batch {i // BATCH_SIZE + 1} of {(len(urls) + BATCH_SIZE - 1) // BATCH_SIZE}")
+        batch_results = check_urls_status(batch)
+        results.extend(batch_results)
+        log_memory(f"After batch {i // BATCH_SIZE + 1}")
     return results
 
 def calculate_statistics(results):
@@ -316,3 +302,9 @@ def calculate_statistics(results):
         'status_categories': status_categories,
         'percentages': percentages
     }
+
+# Entry point or an example of calling process_sitemap
+if __name__ == '__main__':
+    sitemap_url = 'https://example.com/sitemap.xml'
+    result = process_sitemap(sitemap_url)
+    print(result)
