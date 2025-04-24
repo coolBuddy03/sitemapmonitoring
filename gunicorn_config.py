@@ -7,7 +7,7 @@ bind = "0.0.0.0:5000"
 workers = 4  # Start with 2 workers, adjust as needed
 worker_class = 'gevent'  # Use gevent for async workers (lighter on memory)
 worker_connections = 500  # Lower connection limit to conserve memory
-timeout = 120  # Increase timeout to handle longer-running requests
+timeout = 300  # Increase timeout to handle longer-running requests
 keepalive = 2
 
 # Logging
