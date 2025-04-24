@@ -252,6 +252,38 @@ def check_urls_in_batches(urls):
         log_memory(f"After batch {i // BATCH_SIZE + 1}")
     return results
 
+def check_urls_status(urls):
+    """
+    Check status codes for a list of URLs in parallel
+    
+    Args:
+        urls (list): List of URLs to check
+        
+    Returns:
+        list: List of URL status dictionaries
+    """
+    results = []
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        future_to_url = {executor.submit(check_url_status, url): url for url in urls}
+        
+        for future in concurrent.futures.as_completed(future_to_url):
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                url = future_to_url[future]
+                logger.error(f"Error checking URL {url}: {str(e)}")
+                results.append({
+                    'url': url,
+                    'status_code': 0,
+                    'status_message': f'Error: {str(e)}',
+                    'is_redirect': False,
+                    'redirect_url': None
+                })
+    
+    return results
+
 def calculate_statistics(results):
     """
     Calculate statistics from URL checking results
