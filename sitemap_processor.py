@@ -242,7 +242,7 @@ def check_urls_status(urls):
     """
      # Limit the URLs to the first 5
     # Limit the URLs to the first 5
-    urls_to_check = urls[:100]
+    urls_to_check = urls[:50]
 
     results = []
     
