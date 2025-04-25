@@ -4,9 +4,9 @@ import multiprocessing
 bind = "0.0.0.0:5000"
 
 # Worker processes
-workers = 4  # Start with 2 workers, adjust as needed
+workers = 2 # Start with 2 workers, adjust as needed
 worker_class = 'gevent'  # Use gevent for async workers (lighter on memory)
-worker_connections = 500  # Lower connection limit to conserve memory
+worker_connections = 250  # Lower connection limit to conserve memory
 timeout = 300  # Increase timeout to handle longer-running requests
 keepalive = 2
 
@@ -31,5 +31,5 @@ keyfile = None
 certfile = None
 
 # Worker management
-max_requests = 1000  # Restart workers periodically
+max_requests = 500  # Restart workers periodically
 max_requests_jitter = 50  # Add jitter to avoid restarting all workers at once
