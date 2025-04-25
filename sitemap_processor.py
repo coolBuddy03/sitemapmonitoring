@@ -11,10 +11,10 @@ import os
 import psutil
 
 # Environment variables with defaults
-MAX_URLS = int(os.environ.get('MAX_URLS', 5000))
-CHUNK_SIZE = int(os.environ.get('CHUNK_SIZE', 10))
-MAX_WORKERS = int(os.environ.get('MAX_WORKERS', 2))
-MAX_MEMORY_MB = int(os.environ.get('MAX_MEMORY_MB', 500))
+MAX_URLS = 5000
+CHUNK_SIZE =  10
+MAX_WORKERS = 2
+MAX_MEMORY_MB = 500
 
 # Configure logging
 logging.basicConfig(
