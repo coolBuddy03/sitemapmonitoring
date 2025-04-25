@@ -17,8 +17,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET") or "sitemap-monitor-secret-key"
 
 # Environment configuration with defaults
-MAX_URLS = int(os.environ.get('MAX_URLS', 5000))
-MAX_MEMORY_MB = int(os.environ.get('MAX_MEMORY_MB', 500))
+MAX_URLS =  5000
+MAX_MEMORY_MB =  500
 
 def log_memory_usage():
     """Log current memory usage"""
