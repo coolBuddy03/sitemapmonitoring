@@ -5,11 +5,13 @@ import os
 bind = "0.0.0.0:8000"
 
 # Worker processes
-workers = multiprocessing.cpu_count() * 2 + 1
-worker_class = 'sync'
-worker_connections = 1000
-timeout = 18800
-keepalive = 2
+workers = multiprocessing.cpu_count() * 2 + 1  # Dynamic worker calculation
+worker_class = 'gevent'  # Use 'gevent' for asynchronous workers, more suitable for high concurrency
+worker_connections = 1000  # Maximum simultaneous clients per worker
+
+# Timeout and Keep-Alive
+timeout = 30  # Timeout reduced to 30 seconds for quicker failure recovery
+keepalive = 5  # Increase keep-alive to 5 seconds for better performance with long connections
 
 # Logging
 accesslog = "-"
