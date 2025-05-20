@@ -10,8 +10,8 @@ worker_class = 'gevent'  # Use 'gevent' for asynchronous workers, more suitable 
 worker_connections = 1000  # Maximum simultaneous clients per worker
 
 # Timeout and Keep-Alive
-timeout = 30  # Timeout reduced to 30 seconds for quicker failure recovery
-keepalive = 5  # Increase keep-alive to 5 seconds for better performance with long connections
+timeout = 3000  # Timeout reduced to 30 seconds for quicker failure recovery
+keepalive = 50 # Increase keep-alive to 5 seconds for better performance with long connections
 
 # Logging
 accesslog = "-"
