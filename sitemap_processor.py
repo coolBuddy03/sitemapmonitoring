@@ -183,7 +183,7 @@ def check_url_status(url):
         response = requests.head(
             url, 
             allow_redirects=False, 
-            timeout=10,
+            timeout=30,
             headers={'User-Agent': 'SitemapMonitor/1.0'}
         )
         
@@ -192,7 +192,7 @@ def check_url_status(url):
             response = requests.get(
                 url, 
                 allow_redirects=True, 
-                timeout=10,
+                timeout=30,
                 headers={'User-Agent': 'SitemapMonitor/1.0'}
             )
         
